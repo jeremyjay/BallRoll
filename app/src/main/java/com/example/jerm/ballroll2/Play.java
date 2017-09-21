@@ -1,5 +1,6 @@
 package com.example.jerm.ballroll2;
 
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -134,8 +135,7 @@ public class Play extends AppCompatActivity {
         private float mHorizontalBound;
         private float mVerticalBound;
         private final ParticleSystem mParticleSystem;
-//        private final BlockSystem mBlockSystem;
-        private int tile_num = 0;
+        private final BlockSystem mBlockSystem;
         /*
          * Each of our particle holds its previous and current position, its
          * acceleration. for added realism each particle has its own friction
@@ -218,6 +218,16 @@ public class Play extends AppCompatActivity {
                     mVelY = 0;
                 }
 
+                for (int i = 0; i < mBlockSystem.mBlocks.length; i++) {
+                    if((x < (mBlockSystem.mBlocks[i].mPosX - 0.028)) && (y > (mBlockSystem.mBlocks[i].mPosY + 0.044) ))
+                    {
+                        mBlockSystem.mBlocks[i].setBackgroundColor(Color.GREEN);
+                    }
+                    else
+                    {
+                        mBlockSystem.mBlocks[i].setBackgroundColor(Color.RED);
+                    }
+                }
             }
         }
 
@@ -325,6 +335,74 @@ public class Play extends AppCompatActivity {
             }
         }
 
+        class Block extends View {
+            private float mPosX = (float) Math.random();
+            private float mPosY = (float) Math.random();
+
+            public Block(Context context) {
+                super(context);
+            }
+
+            public Block(Context context, AttributeSet attrs) {
+                super(context, attrs);
+            }
+
+            public Block(Context context, AttributeSet attrs, int defStyleAttr) {
+                super(context, attrs, defStyleAttr);
+            }
+
+            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+            public Block(Context context, AttributeSet attrs, int defStyleAttr,
+                            int defStyleRes) {
+                super(context, attrs, defStyleAttr, defStyleRes);
+            }
+
+        }
+
+        class BlockSystem {
+            static final int NUM_BLOCKS = 384;
+            private Block mBlocks[] = new Block[NUM_BLOCKS];
+
+            BlockSystem() {
+
+                for (int i = 0; i < mBlocks.length; i++) {
+                    mBlocks[i] = new Block(getContext());
+//                    mBlocks[i].setBackgroundResource(R.drawable.ball);
+                    mBlocks[i].setBackgroundColor(Color.RED);
+                    mBlocks[i].setLayerType(LAYER_TYPE_HARDWARE, null);
+                    mBlocks[i].mPosX = 0;
+                    mBlocks[i].mPosY = 0;
+                    addView(mBlocks[i], new ViewGroup.LayoutParams(mDstWidth, mDstHeight));
+                }
+
+                for (int i = 0; i < 16; i++) {//num columns
+                    for (int j = 0; j < 24; j++) { //num rows
+                        mBlocks[i*24+j].mPosX = sBallDiameter*i;
+                        mBlocks[i*24+j].mPosY = -sBallDiameter*j;
+                    }
+                }
+
+
+                final float xc = 0;//mXOrigin;
+                final float yc = 0;//mYOrigin;
+                final float xs = mMetersToPixelsX;
+                final float ys = mMetersToPixelsY;
+                for (int i = 0; i < mBlocks.length; i++) {
+                /*
+                 * We transform the canvas so that the coordinate system matches
+                 * the sensors coordinate system with the origin in the center
+                 * of the screen and the unit is the meter.
+                 */
+                    final float x = xc + mBlocks[i].mPosX * xs;
+                    final float y = yc - mBlocks[i].mPosY * ys;
+                    mBlocks[i].setTranslationX(x);
+                    mBlocks[i].setTranslationY(y);
+                }
+
+            }
+
+        }
+
         public void startSimulation() {
             /*
              * It is not necessary to get accelerometer events at a very high
@@ -355,7 +433,7 @@ public class Play extends AppCompatActivity {
             mDstWidth = (int) (sBallDiameter * mMetersToPixelsX + 0.5f);
             mDstHeight = (int) (sBallDiameter * mMetersToPixelsY + 0.5f);
 
-//            mBlockSystem = new BlockSystem();
+            mBlockSystem = new BlockSystem();
             mParticleSystem = new ParticleSystem();
 
             Options opts = new Options();
